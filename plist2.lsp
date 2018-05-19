@@ -1,8 +1,20 @@
-(defun vert (/		 filterlist  vla-obj-list
+; (defun c:pts ()
+  ; (princ "Point List Export Is Activated. Please Select A Polygon:")
+  ; (princ)
+
+  ; (vert)
+  ; (princ)
+; ) ;_ end-of defun
+
+
+
+(defun c:pts (/		 filterlist  vla-obj-list
 	     lwlist	 2dlist	     ptlist	 vlist1
 	     vlist2	 vlist3
 	    )
   (vl-load-com)
+  (princ "Point List Export Is Activated. Please Select A Polygon:")
+  (princ)
   (setq	filterlist   (make-filter)
 	vla-obj-list (get-objects filterlist)
 	lwlist	     (nth 0 vla-obj-list)
@@ -29,24 +41,34 @@
   (setq	i (- 1)
 	vlist nil
   ) ;_ end of setq
+  (setq floop nil)
+  (setq firstPoint nil)
   (repeat (length p-list)
     (setq obj	 (nth (setq i (1+ i)) p-list)
 	  coords (vlax-get-property obj "coordinates")
 	  ca	 (vlax-variant-value coords)
 	  j	 (- 1)
     ) ;_ end-of setq
+	(setq floop 1)
     (repeat (/ (length (vlax-safearray->list ca)) n)
       (setq x (vlax-safearray-get-element ca (setq j (1+ j))))
       (setq y (vlax-safearray-get-element ca (setq j (1+ j))))
       (if (= n 2)
-	(setq xy (list x y))
-	(progn
-	  (setq z (vlax-safearray-get-element ca (setq j (1+ j))))
-	  (setq xy (list x y z))
-	) ;_ end of progn
+		(setq xy (list x y))	
+		(progn
+		  (setq z (vlax-safearray-get-element ca (setq j (1+ j))))
+		  (setq xy (list x y z))
+		) ;_ end of progn
       ) ;_ end of if
+	  (if (= floop 1)
+		(progn
+			 (setq firstPoint xy) 
+			 (setq floop 0)
+		)
+		) ;_ end of if
       (setq vlist (append vlist (list xy)))
     ) ;_ end-of repeat
+	(setq vlist (append vlist (list firstPoint)))
   ) ;_ end-of repeat
 ) ;_ end-of make-list
 
@@ -65,7 +87,7 @@
 		   )
   (setq no-ent 1)
   (while no-ent
-    (setq ss	   (ssget ":S" filter)
+    (setq ss	   (ssget filter)
 	  k	   (- 1)
 	  lwp-list nil
 	  2dp-list nil
@@ -101,13 +123,13 @@
   (list lwp-list 2dp-list pt-list)
 ) ;_ end-of get-objects
 
-(defun setClipText(str / html result)
+(defun setClipText(str / text result)
 (if (= 'STR (type str))
   (progn
-  (setq html   (vlax-create-object "htmlfile")
-        result (vlax-invoke (vlax-get (vlax-get html 'ParentWindow) 'ClipBoardData) 'setData "Text" str)
+  (setq text   (vlax-create-object "htmlfile")
+        result (vlax-invoke (vlax-get (vlax-get text 'ParentWindow) 'ClipBoardData) 'setData "Text" str)
   )
-  (vlax-release-object html)
+  (vlax-release-object text)
    str
    )
  );end if
@@ -148,19 +170,15 @@
 	  (setq stri (strcat stri "\n" str))
 	)
   ) ;_ end of foreach
+  
+  
   (setClipText stri)
   (prompt "Coordinates copied to clipboard.")
   ;(setq f (close f))
   ;(princ)
 ) ;_ end of defun
 
-(defun c:pts ()
-  (princ "Point List Export Is Activated. Please Select A Polygon:")
-  (princ)
 
-  (vert)
-  (princ)
-) ;_ end-of defun
 (princ)
-(prompt "Point List Clipboard Export loaded by T.Hotchkiss/A.Samiee/Mss  - enter PTS to start ")
+(prompt "Point List Clipboard Export loaded. Wrote by T.Hotchkiss/A.Samiee/Mss - enter PTS to start ")
 (princ)
